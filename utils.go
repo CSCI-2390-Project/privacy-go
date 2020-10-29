@@ -10,6 +10,8 @@ type Mode int
 const (
     encryptMode Mode = iota
     decryptMode
+    permissionedEncryptMode
+    permissionedDecryptMode
 )
 
 // `recursiveCrypt` examines all the field values of a message, and encrypts / decrypts them.
@@ -30,16 +32,29 @@ func recursiveCrypt(raw_message proto.Message, mode Mode) {
         } else {
             switch fd.Kind() {
             case protoreflect.StringKind:
-                if mode == encryptMode {
+
+                switch mode {
+                case encryptMode:
                     new_value, err := encrypt(value.String())
                     if err != nil {
                         panic(err)
                     }
                     protomessage.Set(fd, protoreflect.ValueOf(new_value))
-                } else {
+                case decryptMode:
                     new_value := decrypt(value.String())
                     protomessage.Set(fd, protoreflect.ValueOf(new_value))
+                case permissionedDecryptMode:
+                    new_value := PermissionedDecrypt(value.String())
+                    protomessage.Set(fd, protoreflect.ValueOf(new_value))
+                case permissionedEncryptMode:
+                    new_value, err := PermissionedEncrypt(value.String())
+                    if err != nil {
+                        panic(err)
+                    }
+                    protomessage.Set(fd, protoreflect.ValueOf(new_value))
+                default:
                 }
+
             case protoreflect.MessageKind:
                 message := value.Message()
                 recursiveCrypt(message.Interface(), mode)
@@ -50,6 +65,12 @@ func recursiveCrypt(raw_message proto.Message, mode Mode) {
         return true
     })
 
+}
+
+// `recursiveCrypt` examines all the field values of a message, and encrypts / decrypts each field
+// if a policy passes for that module.
+func PermissionedRecursiveCrypt(raw_message proto.Message) {
+    recursiveCrypt(raw_message, permissionedDecryptMode)
 }
 
 // Unmarshal parses the wire-format message in b and places the result in m.
@@ -74,7 +95,11 @@ func PermissionedDecrypt(text string) string {
 }
 
 // Meant for cases where you might want to set a value
-func PermissionedEncrypt(text string) string {
+func PermissionedEncrypt(text string) (string, error) {
     // todo: use policies here!
-    return encrypt(text)
+    encrypted, err := encrypt(text)
+    if err != nil {
+        panic(err)
+    }
+    return encrypted, err
 }
