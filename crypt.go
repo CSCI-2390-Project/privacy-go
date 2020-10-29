@@ -21,9 +21,9 @@ func init() {
 }
 
 // can only support strings.
-func Encrypt(stringToEncrypt string) (string, error) {
+func encrypt(stringToEncrypt string) (string, error) {
     // validate we aren't passing in an already encrypted string!
-    if IsFernetToken([]byte(stringToEncrypt)) {
+    if isFernetToken([]byte(stringToEncrypt)) {
         return stringToEncrypt, nil
     }
 
@@ -35,17 +35,17 @@ func Encrypt(stringToEncrypt string) (string, error) {
 }
 
 // can only support strings
-func Decrypt(encryptedString string) string {
+func decrypt(encryptedString string) string {
 
     // validate we aren't passing in an already decrypted string!
-    if !IsFernetToken([]byte(encryptedString)) {
+    if !isFernetToken([]byte(encryptedString)) {
         return encryptedString
     }
 
     return string(fernet.VerifyAndDecrypt([]byte(encryptedString), 0, fernet.MustDecodeKeys(encoded_key)))
 }
 
-func IsFernetToken(token []byte) bool {
+func isFernetToken(token []byte) bool {
     msg := fernet.VerifyAndDecrypt(token, 0, fernet.MustDecodeKeys(encoded_key))
     return msg != nil
 }

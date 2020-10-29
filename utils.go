@@ -1,7 +1,6 @@
 package privacy
 
 import (
-    "fmt"
     "google.golang.org/protobuf/proto"
     "google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -9,11 +8,11 @@ import (
 type Mode int
 
 const (
-    EncryptMode Mode = iota
-    DecryptMode
+    encryptMode Mode = iota
+    decryptMode
 )
 
-// `recursiveEncrypt` examines all the field values of a message, and encrypts / decrypts them.
+// `recursiveCrypt` examines all the field values of a message, and encrypts / decrypts them.
 func recursiveCrypt(raw_message proto.Message, mode Mode) {
 
     protomessage := raw_message.ProtoReflect()
@@ -31,18 +30,14 @@ func recursiveCrypt(raw_message proto.Message, mode Mode) {
         } else {
             switch fd.Kind() {
             case protoreflect.StringKind:
-
-                // TODO: Replace with a call to privacy.Encrypt
-                if mode == EncryptMode {
-                    new_value, err := Encrypt(value.String())
+                if mode == encryptMode {
+                    new_value, err := encrypt(value.String())
                     if err != nil {
                         panic(err)
                     }
-                    fmt.Println(fmt.Sprintf("Encrypted new_value is %+v", new_value))
                     protomessage.Set(fd, protoreflect.ValueOf(new_value))
                 } else {
-                    new_value := Decrypt(value.String())
-                    fmt.Println(fmt.Sprintf("Decrypted new_value is %+v", new_value))
+                    new_value := decrypt(value.String())
                     protomessage.Set(fd, protoreflect.ValueOf(new_value))
                 }
             case protoreflect.MessageKind:
@@ -61,13 +56,13 @@ func recursiveCrypt(raw_message proto.Message, mode Mode) {
 func Unmarshal(b []byte, m proto.Message) error {
     err := proto.Unmarshal(b, m)
     if err == nil {
-        recursiveCrypt(m, EncryptMode)
+        recursiveCrypt(m, encryptMode)
     }
     return err
 }
 
 // Marshal returns the wire-format encoding of m.
 func Marshal(m proto.Message) ([]byte, error) {
-    recursiveCrypt(m, DecryptMode)
+    recursiveCrypt(m, decryptMode)
     return proto.Marshal(m)
 }
