@@ -66,3 +66,15 @@ func Marshal(m proto.Message) ([]byte, error) {
     recursiveCrypt(m, decryptMode)
     return proto.Marshal(m)
 }
+
+// Meant for cases where you might want to get a value
+func PermissionedDecrypt(text string) string {
+    // todo: use policies here!
+    return decrypt(text)
+}
+
+// Meant for cases where you might want to set a value
+func PermissionedEncrypt(text string) string {
+    // todo: use policies here!
+    return encrypt(text)
+}
