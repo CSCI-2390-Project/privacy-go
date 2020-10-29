@@ -69,7 +69,7 @@ func recursiveCrypt(raw_message proto.Message, mode Mode) {
 
 // `recursiveCrypt` examines all the field values of a message, and encrypts / decrypts each field
 // if a policy passes for that module.
-func PermissionedRecursiveCrypt(raw_message proto.Message) {
+func PermissionedRecursiveDecrypt(raw_message proto.Message) {
     recursiveCrypt(raw_message, permissionedDecryptMode)
 }
 
