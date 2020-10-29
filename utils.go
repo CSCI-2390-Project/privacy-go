@@ -2,8 +2,8 @@ package privacy
 
 import (
     "fmt"
-    "github.com/CSCI-2390-Project/protobuf-go/proto"
-    "github.com/CSCI-2390-Project/protobuf-go/reflect/protoreflect"
+    "google.golang.org/protobuf/proto"
+    "google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type Mode int
