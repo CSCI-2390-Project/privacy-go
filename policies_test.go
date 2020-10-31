@@ -1,20 +1,36 @@
 package privacy
 
 import (
+	"reflect"
 	"testing"
 )
 
-func TestCanReadFile(t *testing.T) {
-	_, err := load_policies("policy_back.json")
+func TestParsing(t *testing.T) {
+	policies, err := loadPolicies("testing/files/example.json")
 	if err != nil {
-		t.Error("Oh no I could not open the file")
+		t.Errorf("Encountered error opening the file %+v", err)
 	}
-}
 
-func Testprint(t *testing.T) {
-	policydoc, err := load_policies("policy_back.json")
-	t.Logf("I am not empty: %+v", policydoc)
-	if err != nil {
-		t.Error("Something happened")
+	expected := map[string]Conditions{
+		"HelloRequest.name": Conditions{
+			CopyConditions:   &[]ConditionStatement{{Key: "message.name", Value: "Rodriguez"}},
+			PrintConditions:  &[]ConditionStatement{},
+			ModifyConditions: nil,
+		},
+		"HelloReply.message": Conditions{
+			CopyConditions:   nil,
+			PrintConditions:  nil,
+			ModifyConditions: nil,
+		},
+	}
+
+	for expected_key, expected_value := range expected {
+		if found_value, ok := policies[expected_key]; ok {
+			if !reflect.DeepEqual(found_value, expected_value) {
+				t.Errorf("Expected %+v, got %+v", expected_value, found_value)
+			}
+		} else {
+			t.Errorf("Expected %s to be in policies %+v", expected_key, policies)
+		}
 	}
 }
