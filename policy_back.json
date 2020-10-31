@@ -1,0 +1,10 @@
+{ 
+    "Policy": [{
+       "Field": "email",
+       "Conditions": {
+           "Copying": [["conditionforcopy"]],
+            "Printing": []
+        }
+    }]
+}
+
