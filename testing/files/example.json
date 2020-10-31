@@ -1,0 +1,22 @@
+{
+  "Policies": [
+    {
+      "Message": "HelloRequest",
+      "Field": "name",
+      "Conditions": {
+        "Copying": [
+          {
+            "key": "message.name",
+            "value": "Rodriguez"
+          }
+        ],
+        "Printing": []
+      }
+    },
+    {
+      "Message": "HelloReply",
+      "Field": "message",
+      "Conditions": {}
+    }
+  ]
+}
