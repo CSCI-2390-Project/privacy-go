@@ -6,8 +6,8 @@
       "Conditions": {
         "Copying": [
           {
-            "key": "message.name",
-            "value": "Rodriguez"
+            "allowed": true,
+            "if": "HelloRequest.GetName < main.main"
           }
         ],
         "Printing": []
