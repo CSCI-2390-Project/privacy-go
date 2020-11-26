@@ -63,7 +63,7 @@ func loadPolicies(file_path string) (map[string]Conditions, error) {
 
 	policies := make(map[string]Conditions)
 	for _, policy := range document.Policies {
-		key := fmt.Sprintf("%s.%s", policy.Message, policy.Field)
+		key := fmt.Sprintf("%s.%s", strings.Title(policy.Message), strings.Title(policy.Field))
 		policies[key] = policy.Conditions
 	}
 
@@ -92,14 +92,21 @@ func loadPoliciesFromEnvironmentVariable() (map[string]Conditions, error) {
 // Do the task of verifying the policies themselves.
 func isActionAllowed(messageName protoreflect.Name, attributeName protoreflect.Name, act action, trace []string) bool {
 
+	log.Debugf("Received %s, %s, %v, %+v", messageName, attributeName, act, trace)
+	log.Debugf("Policies file was parsed as %+v", loaded_policies)
+
 	// if policies don't exist or is empty, assume action is allowed
 	// for backwards-compatibility purposes.
 	if loaded_policies == nil || len(loaded_policies) == 0 {
 		return true
 	}
 
-	key := fmt.Sprintf("%s.%s", messageName, attributeName)
+	key := fmt.Sprintf("%s.%s", strings.Title(string(messageName)), strings.Title(string(attributeName)))
+	log.Debugf("Converting %s, %s to %s", messageName, attributeName, key)
+
 	if conditions, ok := loaded_policies[key]; ok {
+
+		log.Debugf("Found all conditions for %s: %+v", key, conditions)
 
 		chosen_condition := conditions.CopyConditions
 		switch act {
@@ -111,12 +118,16 @@ func isActionAllowed(messageName protoreflect.Name, attributeName protoreflect.N
 			chosen_condition = conditions.ModifyConditions
 		}
 
+		log.Debugf("Because %+v was chosen for action, using specific condition for that action: %+v", key, chosen_condition)
+
 		if chosen_condition == nil {
 			return true
 		}
 
 		for _, condition := range *chosen_condition {
+			log.Debugf("Considering %+v", condition)
 			if matches(condition.If, trace) {
+				log.Debugf("Accepted %+v", condition)
 				return condition.Allowed
 			}
 		}
@@ -125,6 +136,7 @@ func isActionAllowed(messageName protoreflect.Name, attributeName protoreflect.N
 	}
 
 	// if there is no policy for this key at all, the action is allowed.
+	log.Debugf("No corresponding policy for %s in policy file at GRPC_PRIVACY_POLICY_LOCATION was found", key)
 	return true
 }
 
