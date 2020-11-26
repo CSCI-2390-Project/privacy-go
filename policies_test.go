@@ -26,12 +26,12 @@ func TestParsing(t *testing.T) {
 	}
 
 	expected := map[string]Conditions{
-		"HelloRequest.name": Conditions{
+		"HelloRequest.Name": Conditions{
 			CopyConditions:   &[]ConditionStatement{{Allowed: true, If: "HelloRequest.GetName < main.main"}},
 			PrintConditions:  &[]ConditionStatement{},
 			ModifyConditions: nil,
 		},
-		"HelloReply.message": Conditions{
+		"HelloReply.Message": Conditions{
 			CopyConditions:   nil,
 			PrintConditions:  nil,
 			ModifyConditions: nil,
