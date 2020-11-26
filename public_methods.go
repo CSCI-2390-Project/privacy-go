@@ -21,13 +21,10 @@ func PermissionedDecrypt(messageName protoreflect.Name, fieldName protoreflect.N
 func PermissionedEncrypt(messageName protoreflect.Name, fieldName protoreflect.Name, text string) (string, error) {
 
 	if !isActionAllowed(messageName, fieldName, modifying, getStackTrace()) {
-		return text, nil
+		return text, errors.New("Modifying this value in this context was disallowed by policy")
 	}
 
 	encrypted, err := encrypt(text)
-	if err != nil {
-		panic(err)
-	}
 	return encrypted, err
 }
 
