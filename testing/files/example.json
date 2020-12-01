@@ -18,5 +18,13 @@
       "Field": "message",
       "Conditions": {}
     }
+  ],
+  "RequestValidation": [
+    {
+      "MethodName": "foo",
+      "MatchingContext": {
+        "bar": ["baz"]
+      }
+    }
   ]
 }

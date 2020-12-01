@@ -20,7 +20,7 @@ func setupExamplePolicy(t *testing.T, filepath string) func(t *testing.T) {
 
 func TestParsing(t *testing.T) {
 
-	policies, err := loadPolicies("testing/files/example.json")
+	policies, intercepts, err := loadPolicies("testing/files/example.json")
 	if err != nil {
 		t.Errorf("Encountered error opening the file %+v", err)
 	}
@@ -36,6 +36,14 @@ func TestParsing(t *testing.T) {
 			PrintConditions:  nil,
 			ModifyConditions: nil,
 		},
+	}
+
+	if intercepts["foo"] == nil || intercepts["foo"]["bar"] == nil {
+		t.Errorf("Expected map[foo:map[bar:[baz]]]` in intercepts, got %+v", intercepts)
+	}
+
+	if len(intercepts["foo"]["bar"]) != 1 || intercepts["foo"]["bar"][0] != "baz" {
+		t.Errorf("Expected map[foo:map[bar:[baz]]]` in intercepts, got %+v", intercepts)
 	}
 
 	for expected_key, expected_value := range expected {

@@ -1,6 +1,7 @@
 package privacy
 
 import (
+	"errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -43,8 +44,14 @@ func Unmarshal(b []byte, m proto.Message) error {
 	return err
 }
 
-// Marshal returns the wire-format encoding of m.
+// Marshal returns the wire-format encoding of m. Assumes the action is `printing`.
 func Marshal(m proto.Message) ([]byte, error) {
-	recursiveCrypt(m, decryptMode)
+	recursiveCrypt(m, permissionedDecryptMode)
 	return proto.Marshal(m)
+}
+
+// A function that returns a copy of all the loaded intercept methods
+// TODO: Actually return a copy, not a reference to the loaded intercept itself!
+func ExportContextPolicies() map[string]ContextPair {
+	return loaded_intercepts
 }

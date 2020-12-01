@@ -14,14 +14,23 @@ import (
 const environment_variable string = "GRPC_PRIVACY_POLICY_LOCATION"
 
 var loaded_policies map[string]Conditions
+var loaded_intercepts map[string]ContextPair
 
 // run on library import
 func init() {
 	refreshPolicies()
 }
 
+type ContextPair map[string][]string
+
 type PolicyDocument struct {
-	Policies []Policy `json:"Policies"`
+	Policies   []Policy           `json:"Policies"`
+	Intercepts *[]InterceptPolicy `json:"RequestValidation",omitEmpty`
+}
+
+type InterceptPolicy struct {
+	FullName string      `json:"MethodName"`
+	Pairs    ContextPair `json:"MatchingContext"`
 }
 
 type Policy struct {
@@ -42,19 +51,19 @@ type ConditionStatement struct {
 }
 
 // Pull policies from the stored policy file.
-func loadPolicies(file_path string) (map[string]Conditions, error) {
+func loadPolicies(file_path string) (map[string]Conditions, map[string]ContextPair, error) {
 
 	path, err := filepath.Abs(file_path)
 	if err != nil {
 		log.Errorf("Could not resolve provided filepath %s", file_path)
-		return nil, err
+		return nil, nil, err
 	}
 
 	jsonFile, err := os.Open(path)
 	defer jsonFile.Close()
 	if err != nil {
 		log.Errorf("Could not find file at provided filepath %s", file_path)
-		return nil, err
+		return nil, nil, err
 	}
 
 	byteValue, _ := ioutil.ReadAll(jsonFile)
@@ -62,29 +71,36 @@ func loadPolicies(file_path string) (map[string]Conditions, error) {
 	json.Unmarshal(byteValue, &document)
 
 	policies := make(map[string]Conditions)
+	intercepts := make(map[string]ContextPair)
 	for _, policy := range document.Policies {
 		key := fmt.Sprintf("%s.%s", strings.Title(policy.Message), strings.Title(policy.Field))
 		policies[key] = policy.Conditions
 	}
+	if document.Intercepts != nil {
+		for _, intercept := range *(document.Intercepts) {
+			intercepts[intercept.FullName] = intercept.Pairs
+		}
+	}
 
-	return policies, nil
+	return policies, intercepts, nil
 }
 
 // Fetches the policies and stores them in memory. Called once in init().
 // Can be called in testing code as well.
 func refreshPolicies() {
-	policies, err := loadPoliciesFromEnvironmentVariable()
+	policies, intercepts, err := loadPoliciesFromEnvironmentVariable()
 	if err != nil {
 		log.Warnf("Error fetching policies. All actions will be allowed and no policies will be checked.")
 	}
 	loaded_policies = policies
+	loaded_intercepts = intercepts
 }
 
-func loadPoliciesFromEnvironmentVariable() (map[string]Conditions, error) {
+func loadPoliciesFromEnvironmentVariable() (map[string]Conditions, map[string]ContextPair, error) {
 	path := os.Getenv(environment_variable)
 	if len(path) == 0 {
 		log.Warnf("%s not set", environment_variable)
-		return nil, nil
+		return nil, nil, nil
 	}
 	return loadPolicies(path)
 }
@@ -118,7 +134,7 @@ func isActionAllowed(messageName protoreflect.Name, attributeName protoreflect.N
 			chosen_condition = conditions.ModifyConditions
 		}
 
-		log.Debugf("Because %+v was chosen for action, using specific condition for that action: %+v", key, chosen_condition)
+		log.Debugf("Because %+v was chosen for action, using specific condition for that action: %+v", act, chosen_condition)
 
 		if chosen_condition == nil {
 			return true
