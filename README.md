@@ -2,7 +2,7 @@
 
 This library implements an experimental Golang shim for gRPC that implements privacy guarantees for users of gRPC and protocol buffers. Specifically, it enables developers to enforce rules against data access within or between microservices for messages sent along the wire.
 
-A full explanation can be seen in our [report](https://github.com/AkshatM/privacy-go/blob/master/qbox_final_report.pdf)
+A full explanation can be seen in our [report](https://github.com/CSCI-2390-Project/privacy-go/blob/main/CS2390_Project_Final_Report.pdf)
 
 An example application here for build + run: https://github.com/CSCI-2390-Project/privacy-example
 
